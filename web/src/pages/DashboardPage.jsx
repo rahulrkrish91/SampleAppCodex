@@ -5,13 +5,15 @@ import { useAuth } from '../context/AuthContext';
 export default function DashboardPage() {
   const { user } = useAuth();
   const [appointments, setAppointments] = useState([]);
+  const [prescriptions, setPrescriptions] = useState([]);
   const [form, setForm] = useState({ doctorId: '', clinicId: '', appointmentTime: '', reason: '' });
   const [virtualAppointmentId, setVirtualAppointmentId] = useState('');
 
   async function loadAppointments() {
     if (!user) return;
     const { data } = await api.get(`/appointments/patient/${user.id}`);
-    setAppointments(data.appointments);
+    setAppointments(data.appointments || []);
+    setPrescriptions(data.prescriptions || []);
   }
 
   useEffect(() => {
@@ -52,11 +54,28 @@ export default function DashboardPage() {
         <ul>
           {appointments.map((appointment) => (
             <li key={appointment.id}>
-              #{appointment.id} with Dr. {appointment.doctor_name} at {appointment.clinic_name} on{' '}
-              {new Date(appointment.appointment_time).toLocaleString()} ({appointment.status})
+              <strong>{new Date(appointment.appointment_time).toLocaleString()}</strong> | Dr. {appointment.doctor_name} |{' '}
+              {appointment.is_confirmed ? 'Confirmed' : 'Pending confirmation'}
             </li>
           ))}
         </ul>
+      </section>
+
+      <section className="card">
+        <h3>Prescriptions</h3>
+        {prescriptions.length === 0 ? (
+          <p>No prescriptions available yet.</p>
+        ) : (
+          <ul>
+            {prescriptions.map((prescription) => (
+              <li key={prescription.id}>
+                <strong>{prescription.medication_name}</strong> ({prescription.dosage}) by Dr. {prescription.doctor_name}
+                <br />
+                {prescription.instructions || 'No extra instructions'}
+              </li>
+            ))}
+          </ul>
+        )}
       </section>
 
       <section className="card">

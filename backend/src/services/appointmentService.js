@@ -25,12 +25,27 @@ export async function createAppointment({ patientId, doctorId, clinicId, appoint
 export async function getPatientAppointments(patientId) {
   const [rows] = await pool.query(
     `SELECT a.id, a.appointment_time, a.reason, a.status, a.virtual_requested,
-            d.name AS doctor_name, c.name AS clinic_name
+            d.name AS doctor_name, c.name AS clinic_name,
+            CASE WHEN a.status = 'confirmed' THEN 1 ELSE 0 END AS is_confirmed
      FROM appointments a
      JOIN users d ON d.id = a.doctor_id
      JOIN users c ON c.id = a.clinic_id
      WHERE a.patient_id = ? AND a.appointment_time >= NOW()
      ORDER BY a.appointment_time ASC`,
+    [patientId]
+  );
+
+  return rows;
+}
+
+export async function getPatientPrescriptions(patientId) {
+  const [rows] = await pool.query(
+    `SELECT p.id, p.appointment_id, p.medication_name, p.dosage, p.instructions, p.issued_at,
+            d.name AS doctor_name
+     FROM prescriptions p
+     JOIN users d ON d.id = p.doctor_id
+     WHERE p.patient_id = ?
+     ORDER BY p.issued_at DESC`,
     [patientId]
   );
 

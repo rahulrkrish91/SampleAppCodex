@@ -26,6 +26,20 @@ CREATE TABLE IF NOT EXISTS appointments (
   FOREIGN KEY (clinic_id) REFERENCES users(id)
 );
 
+CREATE TABLE IF NOT EXISTS prescriptions (
+  id INT AUTO_INCREMENT PRIMARY KEY,
+  appointment_id INT NOT NULL,
+  patient_id INT NOT NULL,
+  doctor_id INT NOT NULL,
+  medication_name VARCHAR(150) NOT NULL,
+  dosage VARCHAR(150) NOT NULL,
+  instructions TEXT,
+  issued_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+  FOREIGN KEY (appointment_id) REFERENCES appointments(id),
+  FOREIGN KEY (patient_id) REFERENCES users(id),
+  FOREIGN KEY (doctor_id) REFERENCES users(id)
+);
+
 CREATE TABLE IF NOT EXISTS refresh_tokens (
   id INT AUTO_INCREMENT PRIMARY KEY,
   user_id INT NOT NULL,

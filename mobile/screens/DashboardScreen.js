@@ -8,6 +8,7 @@ export default function DashboardScreen() {
   const userId = session?.user?.id;
   const role = session?.user?.role;
   const [appointments, setAppointments] = useState([]);
+  const [prescriptions, setPrescriptions] = useState([]);
   const [appointmentForm, setAppointmentForm] = useState({ doctorId: '', clinicId: '', appointmentTime: '', reason: '' });
   const [virtualId, setVirtualId] = useState('');
 
@@ -19,7 +20,10 @@ export default function DashboardScreen() {
     if (role === 'clinic') url = '/appointments/clinic/me';
 
     const { data } = await api.get(url);
-    setAppointments(data.appointments);
+    setAppointments(data.appointments || []);
+    if (role === 'patient') {
+      setPrescriptions(data.prescriptions || []);
+    }
   }
 
   useEffect(() => {
@@ -51,14 +55,33 @@ export default function DashboardScreen() {
         </>
       )}
 
-      <Text style={styles.subtitle}>Appointments</Text>
+      <Text style={styles.subtitle}>Upcoming Appointments</Text>
       {appointments.map((item) => (
         <View key={item.id} style={styles.card}>
-          <Text>#{item.id}</Text>
-          <Text>Status: {item.status}</Text>
-          <Text>{item.appointment_time}</Text>
+          <Text>Date: {new Date(item.appointment_time).toLocaleString()}</Text>
+          <Text>Doctor: {item.doctor_name || 'N/A'}</Text>
+          <Text>{item.is_confirmed ? 'Confirmed' : 'Pending confirmation'}</Text>
         </View>
       ))}
+
+      {role === 'patient' && (
+        <>
+          <Text style={styles.subtitle}>Prescriptions</Text>
+          {prescriptions.length === 0 ? (
+            <View style={styles.card}>
+              <Text>No prescriptions available yet.</Text>
+            </View>
+          ) : (
+            prescriptions.map((item) => (
+              <View key={item.id} style={styles.card}>
+                <Text>{item.medication_name} ({item.dosage})</Text>
+                <Text>Doctor: {item.doctor_name}</Text>
+                <Text>{item.instructions || 'No extra instructions'}</Text>
+              </View>
+            ))
+          )}
+        </>
+      )}
 
       {role === 'patient' && (
         <>

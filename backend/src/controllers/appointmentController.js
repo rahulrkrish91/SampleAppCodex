@@ -4,6 +4,7 @@ import {
   getClinicAppointments,
   getDoctorAppointments,
   getPatientAppointments,
+  getPatientPrescriptions,
   requestVirtualConsultation,
 } from '../services/appointmentService.js';
 
@@ -18,8 +19,12 @@ export const patientDashboard = asyncHandler(async (req, res) => {
     return res.status(403).json({ message: 'Patients can only view their own dashboard.' });
   }
 
-  const appointments = await getPatientAppointments(requestedId);
-  return res.status(200).json({ appointments });
+  const [appointments, prescriptions] = await Promise.all([
+    getPatientAppointments(requestedId),
+    getPatientPrescriptions(requestedId),
+  ]);
+
+  return res.status(200).json({ appointments, prescriptions });
 });
 
 export const doctorDashboard = asyncHandler(async (req, res) => {

@@ -11,12 +11,13 @@ Full-stack starter architecture for a **dental clinic management platform**:
 
 1. Login/registration for `patient`, `doctor`, and `clinic`
 2. Appointment scheduling
-3. Patient dashboard (upcoming appointments)
-4. Virtual consultation request
-5. Input validation with **Joi**
-6. Centralized robust error handling
-7. Access/refresh token flow with refresh token revocation
-8. Role-based dashboards for patient, doctor, and clinic (web + mobile)
+3. Patient dashboard (upcoming appointments with date, doctor, confirmation status)
+4. Patient prescription card/data
+5. Virtual consultation request
+6. Input validation with **Joi**
+7. Centralized robust error handling
+8. Access/refresh token flow with refresh token revocation
+9. Role-based dashboards for patient, doctor, and clinic (web + mobile)
 
 ## Project Structure
 
