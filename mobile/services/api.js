@@ -12,4 +12,10 @@ export function setToken(token) {
   }
 }
 
+export async function refreshWithToken(refreshToken) {
+  const { data } = await api.post('/auth/refresh', { refreshToken });
+  setToken(data.accessToken);
+  return data;
+}
+
 export default api;

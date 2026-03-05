@@ -1,69 +1,63 @@
 # Dental Clinic Platform (Web + Mobile + API)
 
-This repository now includes a complete starter architecture for a **dental clinic management solution** with:
+Full-stack starter architecture for a **dental clinic management platform**:
 
 - **Node.js + Express backend**
 - **MySQL database**
 - **React web app**
 - **React Native (Expo) mobile app**
 
-## Main Features Implemented
+## Implemented Features
 
-1. **Login & registration** for `patient`, `doctor`, and `clinic`
-2. **Scheduling appointments**
-3. **Patient dashboard** showing upcoming appointments
-4. **Request virtual consultation** on an appointment
-
----
+1. Login/registration for `patient`, `doctor`, and `clinic`
+2. Appointment scheduling
+3. Patient dashboard (upcoming appointments)
+4. Virtual consultation request
+5. Input validation with **Joi**
+6. Centralized robust error handling
+7. Access/refresh token flow with refresh token revocation
+8. Role-based dashboards for patient, doctor, and clinic (web + mobile)
 
 ## Project Structure
 
-- `backend/` → Node.js API + MySQL schema
+- `backend/` → Node.js API, validation, auth, MySQL schema
 - `web/` → React web client
-- `mobile/` → React Native mobile client (Expo)
-
----
+- `mobile/` → React Native mobile app (Expo)
 
 ## Backend setup (`backend/`)
-
-### 1) Install dependencies
 
 ```bash
 cd backend
 npm install
-```
-
-### 2) Configure environment
-
-```bash
 cp .env.example .env
 ```
 
-Fill `.env` with your MySQL credentials.
-
-### 3) Initialize database
-
-Run the SQL script in your MySQL server:
+Run MySQL schema:
 
 ```sql
 SOURCE schema.sql;
 ```
 
-### 4) Start API server
+Start API:
 
 ```bash
 npm run dev
 ```
 
-Backend endpoints:
+### Auth endpoints
 
 - `POST /api/auth/register`
 - `POST /api/auth/login`
+- `POST /api/auth/refresh`
+- `POST /api/auth/logout`
+
+### Appointment endpoints
+
 - `POST /api/appointments`
 - `GET /api/appointments/patient/:patientId`
+- `GET /api/appointments/doctor/me`
+- `GET /api/appointments/clinic/me`
 - `POST /api/appointments/virtual-consultation`
-
----
 
 ## Web setup (`web/`)
 
@@ -73,11 +67,9 @@ npm install
 npm start
 ```
 
-Optional environment variable:
+Optional env:
 
-- `REACT_APP_API_BASE_URL` (default: `http://localhost:5000/api`)
-
----
+- `REACT_APP_API_BASE_URL` (default `http://localhost:5000/api`)
 
 ## Mobile setup (`mobile/`)
 
@@ -87,19 +79,14 @@ npm install
 npm start
 ```
 
-Optional environment variable:
+Optional env:
 
-- `EXPO_PUBLIC_API_BASE_URL` (default: `http://localhost:5000/api`)
+- `EXPO_PUBLIC_API_BASE_URL` (default `http://localhost:5000/api`)
 
-> For physical devices, replace `localhost` with your machine IP.
+Mobile refresh tokens are saved in **Expo SecureStore**.
 
----
+## Security notes
 
-## Notes
-
-- This is a production-ready **starter foundation**. You should add:
-  - input validation (e.g., Zod/Joi)
-  - robust error handling
-  - refresh tokens and secure storage
-  - role-based dashboards for doctor and clinic
-  - video provider integration (Zoom/Twilio/Agora) for live consultations
+- Refresh tokens are hashed before DB storage (`refresh_tokens` table).
+- Web uses `httpOnly` cookie for refresh token and in-memory access token.
+- Mobile stores refresh token in secure encrypted storage.

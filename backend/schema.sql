@@ -25,3 +25,15 @@ CREATE TABLE IF NOT EXISTS appointments (
   FOREIGN KEY (doctor_id) REFERENCES users(id),
   FOREIGN KEY (clinic_id) REFERENCES users(id)
 );
+
+CREATE TABLE IF NOT EXISTS refresh_tokens (
+  id INT AUTO_INCREMENT PRIMARY KEY,
+  user_id INT NOT NULL,
+  token_hash VARCHAR(255) NOT NULL,
+  expires_at DATETIME NOT NULL,
+  revoked_at DATETIME NULL,
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  UNIQUE KEY uniq_token_hash (token_hash),
+  INDEX idx_refresh_user (user_id),
+  FOREIGN KEY (user_id) REFERENCES users(id)
+);

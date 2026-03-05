@@ -1,4 +1,5 @@
 import React, { useContext, useState } from 'react';
+import * as SecureStore from 'expo-secure-store';
 import { Button, StyleSheet, Text, TextInput, View } from 'react-native';
 import AuthContext from '../context/AuthContext';
 import api, { setToken } from '../services/api';
@@ -11,11 +12,12 @@ export default function LoginScreen({ navigation }) {
   const login = async () => {
     try {
       const { data } = await api.post('/auth/login', credentials);
-      setToken(data.token);
-      setSession(data);
+      setToken(data.accessToken);
+      await SecureStore.setItemAsync('refreshToken', data.refreshToken);
+      setSession({ user: data.user, refreshToken: data.refreshToken });
       navigation.navigate('Dashboard');
     } catch (error) {
-      setMessage(error.response?.data?.message || 'Login failed');
+      setMessage(error.response?.data?.details?.join(', ') || error.response?.data?.message || 'Login failed');
     }
   };
 

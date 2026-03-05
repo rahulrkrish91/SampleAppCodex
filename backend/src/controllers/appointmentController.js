@@ -1,33 +1,38 @@
+import asyncHandler from '../middleware/asyncHandler.js';
 import {
   createAppointment,
+  getClinicAppointments,
+  getDoctorAppointments,
   getPatientAppointments,
   requestVirtualConsultation,
 } from '../services/appointmentService.js';
 
-export async function scheduleAppointment(req, res) {
-  try {
-    const appointment = await createAppointment(req.body);
-    return res.status(201).json({ message: 'Appointment scheduled.', appointment });
-  } catch (error) {
-    return res.status(400).json({ message: error.message });
-  }
-}
+export const scheduleAppointment = asyncHandler(async (req, res) => {
+  const appointment = await createAppointment(req.body);
+  res.status(201).json({ message: 'Appointment scheduled.', appointment });
+});
 
-export async function patientDashboard(req, res) {
-  try {
-    const patientId = Number(req.params.patientId || req.user.id);
-    const appointments = await getPatientAppointments(patientId);
-    return res.status(200).json({ appointments });
-  } catch (error) {
-    return res.status(500).json({ message: error.message });
+export const patientDashboard = asyncHandler(async (req, res) => {
+  const requestedId = Number(req.params.patientId || req.user.id);
+  if (req.user.role === 'patient' && req.user.id !== requestedId) {
+    return res.status(403).json({ message: 'Patients can only view their own dashboard.' });
   }
-}
 
-export async function virtualConsultationRequest(req, res) {
-  try {
-    const result = await requestVirtualConsultation(req.body);
-    return res.status(200).json({ message: 'Virtual consultation requested.', ...result });
-  } catch (error) {
-    return res.status(400).json({ message: error.message });
-  }
-}
+  const appointments = await getPatientAppointments(requestedId);
+  return res.status(200).json({ appointments });
+});
+
+export const doctorDashboard = asyncHandler(async (req, res) => {
+  const appointments = await getDoctorAppointments(req.user.id);
+  res.status(200).json({ appointments });
+});
+
+export const clinicDashboard = asyncHandler(async (req, res) => {
+  const appointments = await getClinicAppointments(req.user.id);
+  res.status(200).json({ appointments });
+});
+
+export const virtualConsultationRequest = asyncHandler(async (req, res) => {
+  const result = await requestVirtualConsultation(req.body, req.user.id);
+  res.status(200).json({ message: 'Virtual consultation requested.', ...result });
+});

@@ -1,9 +1,10 @@
 import jwt from 'jsonwebtoken';
+import { AppError } from './errorMiddleware.js';
 
 export function authenticate(req, res, next) {
   const token = req.headers.authorization?.replace('Bearer ', '');
   if (!token) {
-    return res.status(401).json({ message: 'Authentication token required.' });
+    return next(new AppError('Authentication token required.', 401));
   }
 
   try {
@@ -11,14 +12,14 @@ export function authenticate(req, res, next) {
     req.user = payload;
     return next();
   } catch (error) {
-    return res.status(401).json({ message: 'Invalid or expired token.' });
+    return next(new AppError('Invalid or expired token.', 401));
   }
 }
 
 export function authorize(...allowedRoles) {
   return (req, res, next) => {
-    if (!allowedRoles.includes(req.user.role)) {
-      return res.status(403).json({ message: 'You do not have access to this resource.' });
+    if (!req.user || !allowedRoles.includes(req.user.role)) {
+      return next(new AppError('You do not have access to this resource.', 403));
     }
     return next();
   };

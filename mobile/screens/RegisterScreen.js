@@ -12,7 +12,7 @@ export default function RegisterScreen({ navigation }) {
       setMessage('Registered successfully. Please login.');
       navigation.navigate('Login');
     } catch (error) {
-      setMessage(error.response?.data?.message || 'Registration failed');
+      setMessage(error.response?.data?.details?.join(', ') || error.response?.data?.message || 'Registration failed');
     }
   };
 
@@ -21,7 +21,7 @@ export default function RegisterScreen({ navigation }) {
       <Text style={styles.title}>Dental Clinic Registration</Text>
       <TextInput style={styles.input} placeholder="Name" onChangeText={(name) => setForm({ ...form, name })} />
       <TextInput style={styles.input} placeholder="Email" onChangeText={(email) => setForm({ ...form, email })} />
-      <TextInput style={styles.input} placeholder="Password" secureTextEntry onChangeText={(password) => setForm({ ...form, password })} />
+      <TextInput style={styles.input} placeholder="Password (min 8 chars)" secureTextEntry onChangeText={(password) => setForm({ ...form, password })} />
       <TextInput style={styles.input} placeholder="Role: patient|doctor|clinic" onChangeText={(role) => setForm({ ...form, role })} />
       <Button title="Register" onPress={register} />
       {!!message && <Text>{message}</Text>}
