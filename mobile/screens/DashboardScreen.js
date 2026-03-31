@@ -1,5 +1,6 @@
 import React, { useContext, useEffect, useState } from 'react';
 import { Button, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
+import { Picker } from '@react-native-picker/picker';
 import AuthContext from '../context/AuthContext';
 import api from '../services/api';
 
@@ -9,6 +10,8 @@ export default function DashboardScreen() {
   const role = session?.user?.role;
   const [appointments, setAppointments] = useState([]);
   const [prescriptions, setPrescriptions] = useState([]);
+  const [doctors, setDoctors] = useState([]);
+  const [clinics, setClinics] = useState([]);
   const [appointmentForm, setAppointmentForm] = useState({ doctorId: '', clinicId: '', appointmentTime: '', reason: '' });
   const [virtualId, setVirtualId] = useState('');
 
@@ -19,10 +22,21 @@ export default function DashboardScreen() {
     if (role === 'doctor') url = '/appointments/doctor/me';
     if (role === 'clinic') url = '/appointments/clinic/me';
 
-    const { data } = await api.get(url);
-    setAppointments(data.appointments || []);
+    const requests = [api.get(url)];
     if (role === 'patient') {
-      setPrescriptions(data.prescriptions || []);
+      requests.push(api.get('/users/doctors'));
+      requests.push(api.get('/users/clinics'));
+    }
+
+    const responses = await Promise.all(requests);
+    const dashboardData = responses[0].data;
+
+    setAppointments(dashboardData.appointments || []);
+
+    if (role === 'patient') {
+      setPrescriptions(dashboardData.prescriptions || []);
+      setDoctors(responses[1].data.doctors || []);
+      setClinics(responses[2].data.clinics || []);
     }
   }
 
@@ -32,6 +46,7 @@ export default function DashboardScreen() {
 
   const schedule = async () => {
     await api.post('/appointments', { ...appointmentForm, patientId: userId });
+    setAppointmentForm({ doctorId: '', clinicId: '', appointmentTime: '', reason: '' });
     await load();
   };
 
@@ -47,10 +62,34 @@ export default function DashboardScreen() {
 
       {role === 'patient' && (
         <>
-          <TextInput style={styles.input} placeholder="Doctor ID" onChangeText={(doctorId) => setAppointmentForm({ ...appointmentForm, doctorId })} />
-          <TextInput style={styles.input} placeholder="Clinic ID" onChangeText={(clinicId) => setAppointmentForm({ ...appointmentForm, clinicId })} />
-          <TextInput style={styles.input} placeholder="2026-12-30T09:00:00.000Z" onChangeText={(appointmentTime) => setAppointmentForm({ ...appointmentForm, appointmentTime })} />
-          <TextInput style={styles.input} placeholder="Reason" onChangeText={(reason) => setAppointmentForm({ ...appointmentForm, reason })} />
+          <Text style={styles.label}>Doctor</Text>
+          <View style={styles.pickerWrap}>
+            <Picker
+              selectedValue={appointmentForm.doctorId}
+              onValueChange={(doctorId) => setAppointmentForm({ ...appointmentForm, doctorId })}
+            >
+              <Picker.Item label="Select doctor" value="" />
+              {doctors.map((doctor) => (
+                <Picker.Item key={doctor.id} label={doctor.name} value={String(doctor.id)} />
+              ))}
+            </Picker>
+          </View>
+
+          <Text style={styles.label}>Clinic</Text>
+          <View style={styles.pickerWrap}>
+            <Picker
+              selectedValue={appointmentForm.clinicId}
+              onValueChange={(clinicId) => setAppointmentForm({ ...appointmentForm, clinicId })}
+            >
+              <Picker.Item label="Select clinic" value="" />
+              {clinics.map((clinic) => (
+                <Picker.Item key={clinic.id} label={clinic.name} value={String(clinic.id)} />
+              ))}
+            </Picker>
+          </View>
+
+          <TextInput style={styles.input} placeholder="2026-12-30T09:00:00.000Z" value={appointmentForm.appointmentTime} onChangeText={(appointmentTime) => setAppointmentForm({ ...appointmentForm, appointmentTime })} />
+          <TextInput style={styles.input} placeholder="Reason" value={appointmentForm.reason} onChangeText={(reason) => setAppointmentForm({ ...appointmentForm, reason })} />
           <Button title="Schedule Appointment" onPress={schedule} />
         </>
       )}
@@ -97,6 +136,8 @@ const styles = StyleSheet.create({
   container: { padding: 16, gap: 10 },
   title: { fontSize: 22, fontWeight: '700' },
   subtitle: { fontSize: 18, fontWeight: '600', marginTop: 16 },
+  label: { marginTop: 6, fontWeight: '600' },
   input: { borderWidth: 1, borderColor: '#bbb', borderRadius: 8, padding: 8 },
+  pickerWrap: { borderWidth: 1, borderColor: '#bbb', borderRadius: 8 },
   card: { borderWidth: 1, borderColor: '#ddd', borderRadius: 8, padding: 8, marginTop: 8 },
 });
