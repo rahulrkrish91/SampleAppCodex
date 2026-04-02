@@ -1,6 +1,8 @@
 import React, { useEffect, useState } from 'react';
 import api from '../services/api';
 import { useAuth } from '../context/AuthContext';
+import M3Button from '../components/M3Button';
+import M3Card from '../components/M3Card';
 
 export default function DashboardPage() {
   const { user } = useAuth();
@@ -45,12 +47,13 @@ export default function DashboardPage() {
   };
 
   return (
-    <div>
+    <div className="grid gap-5">
       <h2>Patient Dashboard</h2>
       <p>Welcome, {user?.name}</p>
-      <section className="card">
-        <h3>Schedule appointment</h3>
-        <form onSubmit={bookAppointment}>
+
+      <M3Card>
+        <h3 className="mb-3 text-2xl font-semibold text-m3Primary">Schedule appointment</h3>
+        <form onSubmit={bookAppointment} className="grid gap-3">
           <select value={form.doctorId} onChange={(e) => setForm({ ...form, doctorId: e.target.value })} required>
             <option value="">Select doctor</option>
             {doctors.map((doctor) => (
@@ -65,46 +68,47 @@ export default function DashboardPage() {
           </select>
           <input type="datetime-local" value={form.appointmentTime} onChange={(e) => setForm({ ...form, appointmentTime: e.target.value })} required />
           <input placeholder="Reason" value={form.reason} onChange={(e) => setForm({ ...form, reason: e.target.value })} />
-          <button type="submit">Book</button>
+          <M3Button type="submit">Book</M3Button>
         </form>
-      </section>
+      </M3Card>
 
-      <section className="card">
-        <h3>Upcoming appointments</h3>
-        <ul>
+      <M3Card>
+        <h3 className="mb-3 text-2xl font-semibold text-m3Primary">Upcoming appointments</h3>
+        <div className="grid gap-3">
           {appointments.map((appointment) => (
-            <li key={appointment.id}>
-              <strong>{new Date(appointment.appointment_time).toLocaleString()}</strong> | Dr. {appointment.doctor_name} |{' '}
-              {appointment.is_confirmed ? 'Confirmed' : 'Pending confirmation'}
-            </li>
+            <M3Card key={appointment.id} className="bg-m3SurfaceTint/35">
+              <p><strong>{new Date(appointment.appointment_time).toLocaleString()}</strong></p>
+              <p>Dr. {appointment.doctor_name}</p>
+              <p>{appointment.is_confirmed ? 'Confirmed' : 'Pending confirmation'}</p>
+            </M3Card>
           ))}
-        </ul>
-      </section>
+        </div>
+      </M3Card>
 
-      <section className="card">
-        <h3>Prescriptions</h3>
+      <M3Card>
+        <h3 className="mb-3 text-2xl font-semibold text-m3Primary">Prescriptions</h3>
         {prescriptions.length === 0 ? (
           <p>No prescriptions available yet.</p>
         ) : (
-          <ul>
+          <div className="grid gap-3">
             {prescriptions.map((prescription) => (
-              <li key={prescription.id}>
-                <strong>{prescription.medication_name}</strong> ({prescription.dosage}) by Dr. {prescription.doctor_name}
-                <br />
-                {prescription.instructions || 'No extra instructions'}
-              </li>
+              <M3Card key={prescription.id} className="bg-m3SurfaceTint/35">
+                <p><strong>{prescription.medication_name}</strong> ({prescription.dosage})</p>
+                <p>Doctor: {prescription.doctor_name}</p>
+                <p>{prescription.instructions || 'No extra instructions'}</p>
+              </M3Card>
             ))}
-          </ul>
+          </div>
         )}
-      </section>
+      </M3Card>
 
-      <section className="card">
-        <h3>Request virtual consultation</h3>
-        <form onSubmit={requestVirtual}>
+      <M3Card>
+        <h3 className="mb-3 text-2xl font-semibold text-m3Primary">Request virtual consultation</h3>
+        <form onSubmit={requestVirtual} className="grid gap-3">
           <input placeholder="Appointment ID" value={virtualAppointmentId} onChange={(e) => setVirtualAppointmentId(e.target.value)} />
-          <button type="submit">Request</button>
+          <M3Button variant="outlined" type="submit">Request</M3Button>
         </form>
-      </section>
+      </M3Card>
     </div>
   );
 }

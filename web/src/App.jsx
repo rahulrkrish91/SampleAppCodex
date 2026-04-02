@@ -6,6 +6,8 @@ import RegisterPage from './pages/RegisterPage';
 import DoctorDashboardPage from './pages/DoctorDashboardPage';
 import ClinicDashboardPage from './pages/ClinicDashboardPage';
 import { useAuth } from './context/AuthContext';
+import M3Button from './components/M3Button';
+import SlideInContainer from './components/SlideInContainer';
 
 function ProtectedRoute({ children }) {
   const { user } = useAuth();
@@ -23,13 +25,14 @@ export default function App() {
   const { user, logout } = useAuth();
 
   return (
-    <main className="container">
-      <nav>
-        <Link to="/register">Register</Link> | <Link to="/login">Login</Link>
+    <SlideInContainer className="mx-auto min-h-screen max-w-5xl px-6 py-8">
+      <nav className="mb-8 flex flex-wrap items-center gap-3">
+        <Link to="/register"><M3Button variant="outlined">Register</M3Button></Link>
+        <Link to="/login"><M3Button variant="outlined">Login</M3Button></Link>
         {user && (
           <>
-            {' '}
-            | <Link to="/dashboard">Dashboard</Link> | <button type="button" onClick={logout}>Logout</button>
+            <Link to="/dashboard"><M3Button>Dashboard</M3Button></Link>
+            <M3Button variant="outlined" onClick={logout}>Logout</M3Button>
           </>
         )}
       </nav>
@@ -46,6 +49,6 @@ export default function App() {
           )}
         />
       </Routes>
-    </main>
+    </SlideInContainer>
   );
 }

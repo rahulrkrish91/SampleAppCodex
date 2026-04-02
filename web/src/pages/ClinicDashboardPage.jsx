@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import api from '../services/api';
+import M3Card from '../components/M3Card';
 
 export default function ClinicDashboardPage() {
   const [appointments, setAppointments] = useState([]);
@@ -9,15 +10,15 @@ export default function ClinicDashboardPage() {
   }, []);
 
   return (
-    <section className="card">
-      <h2>Clinic Dashboard</h2>
-      <ul>
+    <M3Card>
+      <h2 className="mb-4">Clinic Dashboard</h2>
+      <div className="grid gap-3">
         {appointments.map((item) => (
-          <li key={item.id}>
+          <M3Card key={item.id} className="bg-m3SurfaceTint/35">
             #{item.id} - Dr. {item.doctor_name} with {item.patient_name} ({item.status})
-          </li>
+          </M3Card>
         ))}
-      </ul>
-    </section>
+      </div>
+    </M3Card>
   );
 }
