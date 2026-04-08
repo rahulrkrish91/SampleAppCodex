@@ -3,7 +3,6 @@ import { motion } from 'framer-motion';
 
 export default function M3Button({ children, variant = 'filled', className = '', ...props }) {
   const [ripple, setRipple] = React.useState(null);
-  const buttonRef = React.useRef(null);
 
   const base = 'relative overflow-hidden rounded-m3 px-5 py-2.5 text-bodyMd font-medium transition-colors';
   const variants = {
@@ -13,12 +12,9 @@ export default function M3Button({ children, variant = 'filled', className = '',
 
   return (
     <motion.button
-      ref={buttonRef}
       whileTap={{ scale: 0.98 }}
       onTapStart={(event) => {
-        const node = buttonRef.current || event.currentTarget || event.target;
-        if (!node) return;
-        const bounds = node.getBoundingClientRect();
+        const bounds = event.currentTarget.getBoundingClientRect();
         setRipple({
           x: event.clientX - bounds.left,
           y: event.clientY - bounds.top,
