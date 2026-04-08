@@ -12,7 +12,8 @@ export default function DashboardScreen() {
   const [prescriptions, setPrescriptions] = useState([]);
   const [doctors, setDoctors] = useState([]);
   const [clinics, setClinics] = useState([]);
-  const [appointmentForm, setAppointmentForm] = useState({ doctorId: '', clinicId: '', appointmentTime: '', reason: '' });
+  const [treatments, setTreatments] = useState([]);
+  const [appointmentForm, setAppointmentForm] = useState({ doctorId: '', clinicId: '', treatmentId: '', appointmentTime: '' });
   const [virtualId, setVirtualId] = useState('');
 
   async function load() {
@@ -26,6 +27,7 @@ export default function DashboardScreen() {
     if (role === 'patient') {
       requests.push(api.get('/users/doctors'));
       requests.push(api.get('/users/clinics'));
+      requests.push(api.get('/treatments'));
     }
 
     const responses = await Promise.all(requests);
@@ -37,6 +39,7 @@ export default function DashboardScreen() {
       setPrescriptions(dashboardData.prescriptions || []);
       setDoctors(responses[1].data.doctors || []);
       setClinics(responses[2].data.clinics || []);
+      setTreatments(responses[3].data.treatments || []);
     }
   }
 
@@ -46,7 +49,7 @@ export default function DashboardScreen() {
 
   const schedule = async () => {
     await api.post('/appointments', { ...appointmentForm, patientId: userId });
-    setAppointmentForm({ doctorId: '', clinicId: '', appointmentTime: '', reason: '' });
+    setAppointmentForm({ doctorId: '', clinicId: '', treatmentId: '', appointmentTime: '' });
     await load();
   };
 
@@ -88,8 +91,24 @@ export default function DashboardScreen() {
             </Picker>
           </View>
 
+          <Text style={styles.label}>Treatment</Text>
+          <View style={styles.pickerWrap}>
+            <Picker
+              selectedValue={appointmentForm.treatmentId}
+              onValueChange={(treatmentId) => setAppointmentForm({ ...appointmentForm, treatmentId })}
+            >
+              <Picker.Item label="Select treatment" value="" />
+              {treatments.map((treatment) => (
+                <Picker.Item
+                  key={treatment.id}
+                  label={`${treatment.name}${treatment.rate !== null ? ` ($${Number(treatment.rate).toFixed(2)})` : ''}`}
+                  value={String(treatment.id)}
+                />
+              ))}
+            </Picker>
+          </View>
+
           <TextInput style={styles.input} placeholder="2026-12-30T09:00:00.000Z" value={appointmentForm.appointmentTime} onChangeText={(appointmentTime) => setAppointmentForm({ ...appointmentForm, appointmentTime })} />
-          <TextInput style={styles.input} placeholder="Reason" value={appointmentForm.reason} onChangeText={(reason) => setAppointmentForm({ ...appointmentForm, reason })} />
           <Button title="Schedule Appointment" onPress={schedule} />
         </>
       )}
@@ -99,6 +118,7 @@ export default function DashboardScreen() {
         <View key={item.id} style={styles.card}>
           <Text>Date: {new Date(item.appointment_time).toLocaleString()}</Text>
           <Text>Doctor: {item.doctor_name || 'N/A'}</Text>
+          <Text>Treatment: {item.treatment_name || item.reason || 'N/A'}</Text>
           <Text>{item.is_confirmed ? 'Confirmed' : 'Pending confirmation'}</Text>
         </View>
       ))}

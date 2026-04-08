@@ -10,11 +10,35 @@ CREATE TABLE IF NOT EXISTS users (
   created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
+CREATE TABLE IF NOT EXISTS treatments (
+  id INT AUTO_INCREMENT PRIMARY KEY,
+  name VARCHAR(150) UNIQUE NOT NULL,
+  rate DECIMAL(10,2) NULL,
+  active TINYINT(1) DEFAULT 1,
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+INSERT IGNORE INTO treatments (name, rate, active) VALUES
+('Dental Exams and Cleaning', NULL, 1),
+('Dental Filings', NULL, 1),
+('Root Canal', NULL, 1),
+('Crowns and Bridges', NULL, 1),
+('Dentures', NULL, 1),
+('Dental Implants', NULL, 1),
+('Scaning', NULL, 1),
+('Teeth Whitening', NULL, 1),
+('Dental Veeners', NULL, 1),
+('Braces and Aligners', NULL, 1),
+('Tooth Extraction', NULL, 1),
+('Periodontal Treatment', NULL, 1);
+
 CREATE TABLE IF NOT EXISTS appointments (
   id INT AUTO_INCREMENT PRIMARY KEY,
   patient_id INT NOT NULL,
   doctor_id INT NOT NULL,
   clinic_id INT NOT NULL,
+  treatment_id INT NOT NULL,
+  treatment_rate DECIMAL(10,2) NULL,
   appointment_time DATETIME NOT NULL,
   reason TEXT,
   patient_notes TEXT,
@@ -23,7 +47,8 @@ CREATE TABLE IF NOT EXISTS appointments (
   created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
   FOREIGN KEY (patient_id) REFERENCES users(id),
   FOREIGN KEY (doctor_id) REFERENCES users(id),
-  FOREIGN KEY (clinic_id) REFERENCES users(id)
+  FOREIGN KEY (clinic_id) REFERENCES users(id),
+  FOREIGN KEY (treatment_id) REFERENCES treatments(id)
 );
 
 CREATE TABLE IF NOT EXISTS prescriptions (

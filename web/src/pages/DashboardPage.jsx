@@ -10,22 +10,25 @@ export default function DashboardPage() {
   const [prescriptions, setPrescriptions] = useState([]);
   const [doctors, setDoctors] = useState([]);
   const [clinics, setClinics] = useState([]);
-  const [form, setForm] = useState({ doctorId: '', clinicId: '', appointmentTime: '', reason: '' });
+  const [treatments, setTreatments] = useState([]);
+  const [form, setForm] = useState({ doctorId: '', clinicId: '', treatmentId: '', appointmentTime: '' });
   const [virtualAppointmentId, setVirtualAppointmentId] = useState('');
 
   async function loadDashboardData() {
     if (!user) return;
 
-    const [{ data: dashboardData }, { data: doctorsData }, { data: clinicsData }] = await Promise.all([
+    const [{ data: dashboardData }, { data: doctorsData }, { data: clinicsData }, { data: treatmentsData }] = await Promise.all([
       api.get(`/appointments/patient/${user.id}`),
       api.get('/users/doctors'),
       api.get('/users/clinics'),
+      api.get('/treatments'),
     ]);
 
     setAppointments(dashboardData.appointments || []);
     setPrescriptions(dashboardData.prescriptions || []);
     setDoctors(doctorsData.doctors || []);
     setClinics(clinicsData.clinics || []);
+    setTreatments(treatmentsData.treatments || []);
   }
 
   useEffect(() => {
@@ -35,7 +38,7 @@ export default function DashboardPage() {
   const bookAppointment = async (event) => {
     event.preventDefault();
     await api.post('/appointments', { ...form, patientId: user.id });
-    setForm({ doctorId: '', clinicId: '', appointmentTime: '', reason: '' });
+    setForm({ doctorId: '', clinicId: '', treatmentId: '', appointmentTime: '' });
     await loadDashboardData();
   };
 
@@ -66,8 +69,15 @@ export default function DashboardPage() {
               <option key={clinic.id} value={clinic.id}>{clinic.name}</option>
             ))}
           </select>
+          <select value={form.treatmentId} onChange={(e) => setForm({ ...form, treatmentId: e.target.value })} required>
+            <option value="">Select treatment</option>
+            {treatments.map((treatment) => (
+              <option key={treatment.id} value={treatment.id}>
+                {treatment.name} {treatment.rate !== null ? `($${Number(treatment.rate).toFixed(2)})` : ''}
+              </option>
+            ))}
+          </select>
           <input type="datetime-local" value={form.appointmentTime} onChange={(e) => setForm({ ...form, appointmentTime: e.target.value })} required />
-          <input placeholder="Reason" value={form.reason} onChange={(e) => setForm({ ...form, reason: e.target.value })} />
           <M3Button type="submit">Book</M3Button>
         </form>
       </M3Card>
@@ -79,6 +89,8 @@ export default function DashboardPage() {
             <M3Card key={appointment.id} className="bg-m3SurfaceTint/35">
               <p><strong>{new Date(appointment.appointment_time).toLocaleString()}</strong></p>
               <p>Dr. {appointment.doctor_name}</p>
+              <p>Treatment: {appointment.treatment_name}</p>
+              <p>Rate: {appointment.treatment_rate !== null ? `$${Number(appointment.treatment_rate).toFixed(2)}` : 'N/A'}</p>
               <p>{appointment.is_confirmed ? 'Confirmed' : 'Pending confirmation'}</p>
             </M3Card>
           ))}

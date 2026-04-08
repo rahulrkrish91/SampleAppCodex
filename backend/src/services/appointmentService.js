@@ -8,26 +8,48 @@ async function ensureRole(userId, role) {
   }
 }
 
-export async function createAppointment({ patientId, doctorId, clinicId, appointmentTime, reason }) {
+export async function createAppointment({ patientId, doctorId, clinicId, treatmentId, appointmentTime }) {
   await ensureRole(patientId, 'patient');
   await ensureRole(doctorId, 'doctor');
   await ensureRole(clinicId, 'clinic');
-
-  const [result] = await pool.query(
-    `INSERT INTO appointments (patient_id, doctor_id, clinic_id, appointment_time, reason, status)
-     VALUES (?, ?, ?, ?, ?, 'scheduled')`,
-    [patientId, doctorId, clinicId, appointmentTime, reason || null]
+  const [treatments] = await pool.query(
+    'SELECT id, name, rate FROM treatments WHERE id = ? AND active = 1 LIMIT 1',
+    [treatmentId]
   );
 
-  return { id: result.insertId, patientId, doctorId, clinicId, appointmentTime, reason, status: 'scheduled' };
+  if (!treatments.length) {
+    throw new AppError('Invalid treatment selection.', 400);
+  }
+
+  const selectedTreatment = treatments[0];
+
+  const [result] = await pool.query(
+    `INSERT INTO appointments (patient_id, doctor_id, clinic_id, treatment_id, treatment_rate, appointment_time, reason, status)
+     VALUES (?, ?, ?, ?, ?, ?, ?, 'scheduled')`,
+    [patientId, doctorId, clinicId, selectedTreatment.id, selectedTreatment.rate, appointmentTime, selectedTreatment.name]
+  );
+
+  return {
+    id: result.insertId,
+    patientId,
+    doctorId,
+    clinicId,
+    treatmentId: selectedTreatment.id,
+    treatmentName: selectedTreatment.name,
+    treatmentRate: selectedTreatment.rate,
+    appointmentTime,
+    status: 'scheduled',
+  };
 }
 
 export async function getPatientAppointments(patientId) {
   const [rows] = await pool.query(
-    `SELECT a.id, a.appointment_time, a.reason, a.status, a.virtual_requested,
+    `SELECT a.id, a.appointment_time, a.reason, a.status, a.virtual_requested, a.treatment_rate,
+            t.name AS treatment_name,
             d.name AS doctor_name, c.name AS clinic_name,
             CASE WHEN a.status = 'confirmed' THEN 1 ELSE 0 END AS is_confirmed
      FROM appointments a
+     JOIN treatments t ON t.id = a.treatment_id
      JOIN users d ON d.id = a.doctor_id
      JOIN users c ON c.id = a.clinic_id
      WHERE a.patient_id = ? AND a.appointment_time >= NOW()
@@ -54,9 +76,11 @@ export async function getPatientPrescriptions(patientId) {
 
 export async function getDoctorAppointments(doctorId) {
   const [rows] = await pool.query(
-    `SELECT a.id, a.appointment_time, a.reason, a.status, a.virtual_requested,
+    `SELECT a.id, a.appointment_time, a.reason, a.status, a.virtual_requested, a.treatment_rate,
+            t.name AS treatment_name,
             p.name AS patient_name, c.name AS clinic_name
      FROM appointments a
+     JOIN treatments t ON t.id = a.treatment_id
      JOIN users p ON p.id = a.patient_id
      JOIN users c ON c.id = a.clinic_id
      WHERE a.doctor_id = ?
@@ -68,9 +92,11 @@ export async function getDoctorAppointments(doctorId) {
 
 export async function getClinicAppointments(clinicId) {
   const [rows] = await pool.query(
-    `SELECT a.id, a.appointment_time, a.reason, a.status, a.virtual_requested,
+    `SELECT a.id, a.appointment_time, a.reason, a.status, a.virtual_requested, a.treatment_rate,
+            t.name AS treatment_name,
             p.name AS patient_name, d.name AS doctor_name
      FROM appointments a
+     JOIN treatments t ON t.id = a.treatment_id
      JOIN users p ON p.id = a.patient_id
      JOIN users d ON d.id = a.doctor_id
      WHERE a.clinic_id = ?
