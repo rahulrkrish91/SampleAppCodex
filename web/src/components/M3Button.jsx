@@ -1,8 +1,9 @@
 import React from 'react';
 import { motion } from 'framer-motion';
 
-export default function M3Button({ children, variant = 'filled', className = '', ...props }) {
+export default function M3Button({ children, variant = 'filled', className = '', onPointerDown, ...props }) {
   const [ripple, setRipple] = React.useState(null);
+  const buttonRef = React.useRef(null);
 
   const base = 'relative overflow-hidden rounded-m3 px-5 py-2.5 text-bodyMd font-medium transition-colors';
   const variants = {
@@ -10,17 +11,25 @@ export default function M3Button({ children, variant = 'filled', className = '',
     outlined: 'border border-m3Secondary text-m3Secondary bg-transparent hover:bg-m3SurfaceTint/40',
   };
 
+  const handlePointerDown = (event) => {
+    onPointerDown?.(event);
+
+    const button = buttonRef.current;
+    if (!button) return;
+
+    const bounds = button.getBoundingClientRect();
+    setRipple({
+      x: event.clientX - bounds.left,
+      y: event.clientY - bounds.top,
+      key: Date.now(),
+    });
+  };
+
   return (
     <motion.button
+      ref={buttonRef}
       whileTap={{ scale: 0.98 }}
-      onTapStart={(event) => {
-        const bounds = event.currentTarget.getBoundingClientRect();
-        setRipple({
-          x: event.clientX - bounds.left,
-          y: event.clientY - bounds.top,
-          key: Date.now(),
-        });
-      }}
+      onPointerDown={handlePointerDown}
       className={`${base} ${variants[variant]} ${className}`}
       {...props}
     >

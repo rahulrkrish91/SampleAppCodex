@@ -123,6 +123,7 @@ export default function ClinicDashboardPage() {
             </M3Card>
           ))}
         </div>
+      </div>
       </M3Card>
     </div>
   );
